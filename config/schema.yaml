@@ -1,0 +1,93 @@
+# schema.yaml
+# Central parameter registry for the water quality prediction framework.
+# Adding a new parameter = add an entry here, no code changes needed.
+#
+# Fields per parameter:
+#   unit          - display/documentation only (not currently converted automatically)
+#   required      - whether every row must have a non-empty value for this column
+#   min_value     - inclusive lower sanity bound (null = no lower bound check)
+#   max_value     - inclusive upper sanity bound (null = no upper bound check)
+#
+# These are deliberately loose "sanity" bounds (not tight regional ranges) —
+# they catch physically/chemically impossible values (e.g. negative
+# concentrations), not statistically unusual-but-plausible ones. Statistical
+# outlier detection (IQR) is a separate, later pipeline stage.
+
+parameters:
+  TDS:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  pH:
+    unit: "-"
+    required: false
+    min_value: 0
+    max_value: 14
+  HCO3:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  Cl:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  SO4:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  Ca:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  Mg:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  Na:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  K:
+    unit: mg/L
+    required: false
+    min_value: 0
+    max_value: null
+  EC:
+    unit: uS/cm
+    required: false
+    min_value: 0
+    max_value: null
+  discharge:
+    unit: m3/s
+    required: false
+    min_value: 0
+    max_value: null
+
+# Non-parameter columns that are always expected in the measurements file.
+required_columns:
+  station_id:
+    type: string
+  date:
+    type: date
+    format: "%Y-%m-%d"
+
+validation_policy:
+  # What happens when a cell value is outside [min_value, max_value]:
+  #   null_cell - only that cell is set to missing; the rest of the row is kept
+  on_out_of_range: null_cell
+
+  # What happens when an optional parameter column is entirely absent:
+  #   allow - fine, the column is simply unavailable for modeling
+  on_missing_optional: allow
+
+  # What happens when the measurements file has a column not listed in
+  # `parameters` or `required_columns`:
+  #   reject_file - stop and tell the user, rather than silently ignoring it
+  on_unknown_column: reject_file
