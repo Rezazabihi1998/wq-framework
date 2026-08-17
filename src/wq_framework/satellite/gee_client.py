@@ -1,4 +1,4 @@
-"""GEE connection and authentication (project brief Section 7).
+"""GEE connection and authentication.
 
 Handles two of the three user-facing modes:
   1. Automated GEE — credentials already cached or a service account is

@@ -1,6 +1,6 @@
 """Base interface for preprocessing (outlier detection) strategies.
 
-See project brief Section 6: preprocessing runs once per station, on the
+preprocessing runs once per station, on the
 full parameter set, before any target parameter is chosen. Each concrete
 method (e.g. IQR) is a Strategy+Registry plugin registered via
 `registry.register_outlier_detector`.

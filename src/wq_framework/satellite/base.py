@@ -1,6 +1,6 @@
 """Base interface for satellite variable retrieval strategies.
 
-See project brief Section 7: variables can come from an automated GEE
+variables can come from an automated GEE
 connection OR a manually-supplied offline file (three user-facing modes,
 sharing one interface — see Section 7 for the full design discussion).
 This interface is deliberately source-agnostic — a future retriever could
@@ -71,7 +71,7 @@ class SatelliteVariableRetriever(ABC):
         `station_id` is passed alongside coordinates so that retrievers
         which don't need coordinates at all — e.g. a manual/offline
         retriever reading from a user-supplied file organized by station
-        identity, per project brief Section 7's "fully offline" mode —
+        identity, per the "fully offline" mode —
         can look data up by station identity rather than requiring an
         exact coordinate match. GEE-backed retrievers use `latitude`/
         `longitude` for the actual query and `station_id` only for

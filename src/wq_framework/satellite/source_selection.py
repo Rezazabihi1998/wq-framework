@@ -1,5 +1,5 @@
-"""Resolves which of the three satellite-data modes to use (project brief
-Section 7): config file first, interactive CLI prompt as a fallback.
+"""Resolves which of the three satellite-data modes to use:
+config file first, interactive CLI prompt as a fallback.
 
 This module has no GEE dependency — it only decides *which* source to use;
 gee_client.py and the manual retriever (Stage 3.3) handle the rest.

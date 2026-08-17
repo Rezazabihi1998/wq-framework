@@ -1,7 +1,5 @@
 """Per-cell schema validation and the confirm-or-halt gate.
 
-Implements the flow confirmed in project brief Section 5:
-
   1. All invalid cells are identified in one pass (not stopped at the first).
   2. Each invalid cell is nulled individually (NaN) — the rest of that row
      is preserved untouched. No row/file is ever dropped for this reason.

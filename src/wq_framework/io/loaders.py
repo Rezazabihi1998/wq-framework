@@ -1,6 +1,6 @@
 """Loading stations.csv and the measurements file (CSV or Excel).
 
-See project brief Section 4 ("Input Data Standard"). Both CSV and Excel are
+Both CSV and Excel are
 supported for the measurements file via this loader abstraction, which
 normalizes either into the same internal pandas representation. CSV is the
 canonical format for the repo itself (e.g. examples/).

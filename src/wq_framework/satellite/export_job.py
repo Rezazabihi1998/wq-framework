@@ -1,5 +1,5 @@
-"""Submitting and polling a single GEE batch Export job (project brief
-Section 7): builds the buffered-region reduction over an entire
+"""Submitting and polling a single GEE batch Export job:
+builds the buffered-region reduction over an entire
 ImageCollection date range as ONE server-side computation, submits it as
 an Export task (not a synchronous call), and polls until it finishes.
 """

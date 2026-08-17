@@ -1,5 +1,4 @@
-"""IQR-based outlier detection (Section 6 of the project brief).
-
+"""
 Behavior (confirmed with the user, based on the original thesis code):
 - k=3 by default (more conservative than the textbook-standard 1.5), to
   preserve hydrologically meaningful extremes while catching clear
@@ -13,9 +12,6 @@ Behavior (confirmed with the user, based on the original thesis code):
 - Outliers are **nulled at the cell level only** — the row is never
   dropped. This differs from the original code (which dropped the entire
   row) and was a deliberate choice to align with the framework's
-  data-preservation philosophy (Section 2), especially important given
-  the schema-validation stage already implements the same cell-level
-  policy for a different kind of invalid value.
 - Pre-existing NaN values (e.g. from schema validation) are left alone —
   they are not counted as outliers and are not part of the quantile
   calculation (pandas' `.quantile()` already ignores NaN by default).

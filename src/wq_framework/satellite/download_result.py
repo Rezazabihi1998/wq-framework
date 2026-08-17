@@ -1,6 +1,6 @@
 """Downloads a completed GEE Export result from Google Drive and parses it
 into the (series, RetrievalReport) contract required by
-SatelliteVariableRetriever.fetch() (project brief Section 7).
+SatelliteVariableRetriever.fetch().
 
 Split into two clearly separate concerns:
   - Drive download mechanics (needs real GEE/Drive credentials — cannot be

@@ -1,6 +1,6 @@
 """Applies a single OutlierDetector across multiple columns of a DataFrame.
 
-Per project brief Section 6, preprocessing runs once per station, on the
+preprocessing runs once per station, on the
 full parameter set. Each column is handled independently (see methods/iqr.py
 docstring for why), so this is a straightforward per-column loop — no
 cross-column state.
