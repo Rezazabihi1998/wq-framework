@@ -1,0 +1,68 @@
+# Reference configuration for wq_framework.
+#
+# Copy this file, edit the copy, and pass it to the framework rather than
+# editing this one — it documents the shipped defaults.
+#
+# Scope note: today only `satellite.source` is read programmatically (by
+# satellite/source_selection.py). The other keys below record the defaults
+# each component currently applies as constructor arguments; they become
+# live configuration as the orchestrator that reads this file is built. The
+# values here match those in-code defaults exactly, so nothing changes
+# behaviour until you edit them.
+
+input:
+  # Paths are relative to wherever the framework is invoked from.
+  stations_file: examples/stations.csv
+  measurements_file: examples/measurements.csv
+  schema_file: config/schema.yaml
+
+preprocessing:
+  # Any name registered via @register_outlier_detector. Ships with "iqr".
+  method: iqr
+  params:
+    # Multiplier on the interquartile range. Deliberately wider than the
+    # conventional 1.5 so that genuine hydrological extremes are kept;
+    # values flagged here are nulled cell-by-cell, never row-dropped.
+    k: 3.0
+
+satellite:
+  # How climate covariates are obtained:
+  #   gee    — submit one batch Export job per station per variable to
+  #            Google Earth Engine (one-time interactive authentication may
+  #            be requested on first use)
+  #   manual — read a user-supplied table instead; no GEE connection is made
+  # If this key is removed entirely, the framework asks interactively.
+  source: gee
+
+  gee:
+    project_id: null                    # your GEE Cloud project id
+    service_account_key_path: null      # set only for unattended/CI runs
+    drive_folder: wq_framework_exports  # where export results are written
+    poll_interval_seconds: 30.0
+    timeout_seconds: 3600.0
+    cache_dir: cache/satellite          # downloaded result CSVs land here
+
+  manual:
+    # Used only when source is "manual". The file needs columns:
+    # station_id, date, and one column per variable listed below.
+    file_path: null
+
+  # Buffer radius averaged over around each station, in km. 0 means the
+  # single grid cell containing the station is sampled instead. Soil
+  # moisture is point-sampled because it varies far more sharply in space
+  # than the climate variables, so averaging over a buffer would blend
+  # unrelated land-cover and soil types.
+  variables:
+    precipitation:
+      buffer_km: 15.0
+    temperature:
+      buffer_km: 15.0
+    evapotranspiration:
+      buffer_km: 15.0
+    solar_radiation:
+      buffer_km: 15.0
+    soil_moisture:
+      buffer_km: 0.0
+
+# Keys for feature selection, models, metrics, and output generation will be
+# added here as those stages are implemented.
