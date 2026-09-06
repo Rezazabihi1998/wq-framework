@@ -106,8 +106,11 @@ class SoilMoistureRetriever(ERA5LandVariableRetriever):
     variable_name = "soil_moisture"
 
     def __init__(self, buffer_km: float = 0.0, **kwargs):
-        # point-sampled by design (Section 7 rationale: buffering would
-        # mix unrelated land-cover/soil types) — default overridden to 0
+        # Point-sampled by design: soil moisture is far more spatially
+        # heterogeneous than the climate variables, so averaging over a
+        # buffer would mix unrelated land-cover/soil types. Default
+        # buffer is therefore overridden to 0 (the caller can still
+        # override it via config if they want a buffered average).
         super().__init__(buffer_km=buffer_km, **kwargs)
 
 

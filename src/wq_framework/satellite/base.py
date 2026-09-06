@@ -1,16 +1,17 @@
 """Base interface for satellite variable retrieval strategies.
 
-variables can come from an automated GEE
-connection OR a manually-supplied offline file (three user-facing modes,
-sharing one interface — see Section 7 for the full design discussion).
+Variables can come from an automated GEE connection OR a manually-supplied
+offline file — three user-facing modes (automated GEE, automated GEE with a
+one-time interactive authentication prompt, and fully offline) all share
+this one interface.
 This interface is deliberately source-agnostic — a future retriever could
 pull from a different product without changing anything else in the
 pipeline. Each concrete retriever is a Strategy+Registry plugin registered
 via `registry.register_satellite_variable`.
 
-This module (Stage 3.1) only defines the interface and transparency
-record — no actual GEE connection exists yet (that's Stage 3.2), so this
-can be developed and tested independently of network/auth concerns.
+This module only defines the interface and transparency record — no actual
+GEE connection lives here, so it can be developed and tested independently
+of network/auth concerns.
 """
 
 from __future__ import annotations
@@ -78,8 +79,9 @@ class SatelliteVariableRetriever(ABC):
         caching/reporting.
 
         Implementations are responsible for any request-batching logic
-        needed by their data source (see Section 7 re: GEE request-rate
-        and synchronous-timeout limits) — callers only see the final
-        combined daily series.
+        needed by their data source (GEE-backed retrievers, for instance,
+        must work around per-request compute-time limits and account-level
+        request-rate quotas) — callers only see the final combined daily
+        series.
         """
         raise NotImplementedError
