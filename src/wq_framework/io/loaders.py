@@ -45,9 +45,9 @@ def load_stations(path: str | Path) -> pd.DataFrame:
 
 def load_measurements(path: str | Path, schema: Schema) -> pd.DataFrame:
     """Load the measurements file (CSV or Excel) and check its structure
-    against schema.yaml (Section 5): unknown columns, required columns,
-    and date parsing. Per-cell value validation (min/max bounds) is a
-    separate step — see validators.py.
+    against schema.yaml: unknown columns, required columns, and date
+    parsing. Per-cell value validation (min/max bounds) is a separate
+    step — see validators.py.
     """
     path = Path(path)
 
@@ -77,8 +77,8 @@ def load_measurements(path: str | Path, schema: Schema) -> pd.DataFrame:
             f"or remove them from the file."
         )
 
-    # Parse date column strictly (Gregorian, ISO 8601 — calendar conversion
-    # from any other system is the user's responsibility, per Section 4).
+    # Parse date column strictly (Gregorian, ISO 8601 — converting dates
+    # from any other calendar system is the user's responsibility).
     try:
         df["date"] = pd.to_datetime(df["date"], format=schema.date_format, errors="raise")
     except (ValueError, TypeError) as exc:

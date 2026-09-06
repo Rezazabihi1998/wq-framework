@@ -59,7 +59,7 @@ def test_load_measurements_unknown_column_rejected(tmp_path, schema):
 def test_load_measurements_bad_date_format(tmp_path, schema):
     bad = tmp_path / "measurements.csv"
     # Non-ISO format (e.g. a Shamsi-style or DD/MM/YYYY date) must be rejected —
-    # calendar conversion is explicitly the user's responsibility (Section 4).
+    # calendar conversion is explicitly the user's responsibility.
     bad.write_text("station_id,date,TDS\nA,21/03/2010,10\n")
     with pytest.raises(InputFileError, match="date"):
         load_measurements(bad, schema)
