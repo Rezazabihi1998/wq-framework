@@ -1,9 +1,9 @@
 """Loading and representing schema.yaml (the parameter registry).
 
-See project brief Section 5 ("schema.yaml and Input Validation") for the
-design rationale: schema validation is a *sanity gate* on raw input,
-independent from and complementary to the later statistical (IQR) outlier
-detection stage.
+Design rationale: schema validation is a *sanity gate* on raw input, used to
+reject physically impossible values. It is independent from, and
+complementary to, the later statistical (IQR) outlier detection stage, which
+looks for anomalies *within* the sanity-valid range.
 """
 
 from __future__ import annotations

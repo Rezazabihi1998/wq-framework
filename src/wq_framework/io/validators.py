@@ -10,8 +10,8 @@
 NaN values produced here are deliberately *not* dropped anywhere in this
 module — downstream stages (feature selection / modeling) are responsible
 for dropping rows locally, scoped only to the columns they actually use
-(see project brief Section 5, "Confirmed NaN-handling strategy"), so a
-NaN in one parameter doesn't cost data for models that don't use it.
+(i.e. `dropna(subset=[target] + selected_features)` at model-input time),
+so a NaN in one parameter doesn't cost data for models that don't use it.
 """
 
 from __future__ import annotations
