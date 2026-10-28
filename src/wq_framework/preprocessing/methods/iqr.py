@@ -11,7 +11,7 @@ Behavior (confirmed with the user, based on the original thesis code):
   reduced data).
 - Outliers are **nulled at the cell level only** — the row is never
   dropped. This differs from the original code (which dropped the entire
-  row) and was a deliberate choice to align with the framework's
+  row) and was a deliberate choice to preserve data on small datasets.
 - Pre-existing NaN values (e.g. from schema validation) are left alone —
   they are not counted as outliers and are not part of the quantile
   calculation (pandas' `.quantile()` already ignores NaN by default).

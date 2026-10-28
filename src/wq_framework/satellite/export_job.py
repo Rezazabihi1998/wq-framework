@@ -2,13 +2,19 @@
 builds the buffered-region reduction over an entire
 ImageCollection date range as ONE server-side computation, submits it as
 an Export task (not a synchronous call), and polls until it finishes.
+
+Date-range handling note: the retriever contract treats `end_date` as
+inclusive, but Earth Engine's `ImageCollection.filterDate(start, end)`
+treats its second argument as EXCLUSIVE. The end bound is therefore
+advanced by one day before the query is built — otherwise the final day
+would be silently dropped from the export.
 """
 
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 
 try:
     import ee
@@ -56,10 +62,16 @@ def submit_export_job(
     end_date: date,
     description: str,
     drive_folder: str = "wq_framework_exports",
+    scale_m: int = 11132,
 ) -> ExportJobHandle:
     """Build the reduceRegion-over-collection computation for the WHOLE
     date range at once and submit it as a single Export task. Returns
     immediately (does not wait) — see wait_for_export_job() below.
+
+    `start_date` and `end_date` are both inclusive, matching the
+    retriever contract. `scale_m` defaults to 11132 m, the native grid
+    resolution of ERA5-Land (~0.1 arc-degrees); a smaller value would
+    resample the data without adding real detail.
     """
     ensure_ee_installed()
 
@@ -67,14 +79,16 @@ def submit_export_job(
     region = point.buffer(buffer_km * 1000) if buffer_km > 0 else point
     reducer = getattr(ee.Reducer, reducer_name)()
 
+    # filterDate's end bound is exclusive, so advance it by one day to
+    # honour the inclusive end_date contract.
     collection = (
         ee.ImageCollection(image_collection_id)
-        .filterDate(str(start_date), str(end_date))
+        .filterDate(str(start_date), str(end_date + timedelta(days=1)))
         .select(band_name)
     )
 
     def _reduce_image(image):
-        value = image.reduceRegion(reducer=reducer, geometry=region, scale=1000)
+        value = image.reduceRegion(reducer=reducer, geometry=region, scale=scale_m)
         return ee.Feature(
             None,
             {"date": image.date().format("YYYY-MM-dd"), "value": value.get(band_name)},

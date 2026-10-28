@@ -36,6 +36,7 @@ class ERA5LandVariableRetriever(SatelliteVariableRetriever):
         drive_folder: str = "wq_framework_exports",
         poll_interval_seconds: float = 30.0,
         timeout_seconds: float = 3600.0,
+        scale_m: int = 11132,
     ):
         super().__init__(buffer_km=buffer_km)
         if self.band_name is None or self.variable_name is None:
@@ -47,6 +48,7 @@ class ERA5LandVariableRetriever(SatelliteVariableRetriever):
         self.drive_folder = drive_folder
         self.poll_interval_seconds = poll_interval_seconds
         self.timeout_seconds = timeout_seconds
+        self.scale_m = scale_m
 
     def fetch(
         self,
@@ -71,6 +73,7 @@ class ERA5LandVariableRetriever(SatelliteVariableRetriever):
             end_date=end_date,
             description=description,
             drive_folder=self.drive_folder,
+            scale_m=self.scale_m,
         )
         wait_for_export_job(
             handle,

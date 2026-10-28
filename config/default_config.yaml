@@ -41,6 +41,10 @@ satellite:
     poll_interval_seconds: 30.0
     timeout_seconds: 3600.0
     cache_dir: cache/satellite          # downloaded result CSVs land here
+    # Analysis scale in metres. 11132 m is ERA5-Land's native grid
+    # resolution (~0.1 arc-degrees); a smaller value resamples without
+    # adding real detail.
+    scale_m: 11132
 
   manual:
     # Used only when source is "manual". The file needs columns:
