@@ -36,14 +36,21 @@ class RetrievalReport:
     n_days_requested: int = 0
     n_days_returned: int = 0
     params: dict = field(default_factory=dict)
+    canonical_unit: str | None = None
+    n_values_clamped: int = 0
 
     def __str__(self) -> str:
-        return (
+        text = (
             f"{self.variable} for station '{self.station_id}' "
             f"({self.source}, buffer={self.buffer_km}km): "
             f"{self.n_days_returned}/{self.n_days_requested} day(s) retrieved "
             f"[{self.start_date} .. {self.end_date}]"
         )
+        if self.canonical_unit is not None:
+            text += f", in {self.canonical_unit}"
+        if self.n_values_clamped:
+            text += f", {self.n_values_clamped} value(s) clamped to a physical floor"
+        return text
 
 
 class SatelliteVariableRetriever(ABC):
@@ -68,6 +75,13 @@ class SatelliteVariableRetriever(ABC):
     ) -> tuple[pd.Series, RetrievalReport]:
         """Return a daily time series (indexed by date, inclusive of both
         endpoints) for the given station, plus a RetrievalReport.
+
+        The returned values must be in the variable's canonical unit (see
+        `units.CANONICAL_UNITS`), not in whatever unit the underlying
+        source stores them in. This is what makes the automated and
+        offline modes interchangeable: both feed the models the same
+        physical quantity on the same scale, and the report records which
+        unit the caller is looking at.
 
         `station_id` is passed alongside coordinates so that retrievers
         which don't need coordinates at all — e.g. a manual/offline

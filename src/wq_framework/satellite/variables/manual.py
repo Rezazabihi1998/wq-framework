@@ -3,6 +3,12 @@
 Registered under the generic name "manual" (not per-variable) since one
 class serves any variable — the specific column to read is passed at
 construction time via `value_column`.
+
+The file is expected to already hold values in the variable's canonical
+unit (see satellite/units.py): a user preparing this table by hand is
+working with the physical quantity they want the models to see, not with
+Earth Engine's internal storage units. No conversion is applied, and the
+report says so explicitly rather than leaving the unit ambiguous.
 """
 
 from __future__ import annotations
@@ -12,6 +18,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from .. import units
 from ..base import RetrievalReport, SatelliteVariableRetriever
 from ..registry import register_satellite_variable
 
@@ -22,12 +29,32 @@ class ManualFileRetriever(SatelliteVariableRetriever):
     column per variable (e.g. 'precipitation', 'temperature', ...) — the
     same general shape as the main measurements file, just for satellite
     variables instead of water quality parameters.
+
+    `canonical_unit` may be supplied to state which unit the column is in;
+    it is recorded in the report and never used to convert. Passing a
+    value that disagrees with the variable's expected canonical unit
+    raises, since a silent mismatch between the two retrieval modes would
+    be invisible downstream.
     """
 
-    def __init__(self, file_path: str | Path, value_column: str, buffer_km: float = 0.0):
+    def __init__(
+        self,
+        file_path: str | Path,
+        value_column: str,
+        buffer_km: float = 0.0,
+        canonical_unit: str | None = None,
+    ):
         super().__init__(buffer_km=buffer_km)
         self.file_path = Path(file_path)
         self.value_column = value_column
+        self.canonical_unit = canonical_unit or units.CANONICAL_UNITS.get(value_column)
+        expected = units.CANONICAL_UNITS.get(value_column)
+        if expected is not None and self.canonical_unit != expected:
+            raise ValueError(
+                f"manual satellite column '{value_column}' is declared as "
+                f"'{self.canonical_unit}' but the framework expects '{expected}' "
+                f"for this variable — convert the column before loading it"
+            )
         self._data: pd.DataFrame | None = None  # loaded lazily, cached across calls
 
     def _load(self) -> pd.DataFrame:
@@ -76,5 +103,6 @@ class ManualFileRetriever(SatelliteVariableRetriever):
             end_date=end_date,
             n_days_requested=n_requested,
             n_days_returned=len(series),
+            canonical_unit=self.canonical_unit,
         )
         return series, report

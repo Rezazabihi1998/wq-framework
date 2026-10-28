@@ -1,3 +1,4 @@
+from . import units
 from .base import RetrievalReport, SatelliteVariableRetriever
 from .registry import (
     available_satellite_variables,
@@ -11,4 +12,5 @@ __all__ = [
     "available_satellite_variables",
     "get_satellite_variable",
     "register_satellite_variable",
+    "units",
 ]
