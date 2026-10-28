@@ -3,6 +3,7 @@ from datetime import date
 import pandas as pd
 import pytest
 
+from wq_framework.satellite import caching
 from wq_framework.satellite.base import RetrievalReport, SatelliteVariableRetriever
 from wq_framework.satellite.caching import CachingRetriever
 
@@ -95,3 +96,104 @@ def test_different_buffer_km_gets_separate_cache_entry(tmp_path):
     cached_10.fetch("DAM_UP", 32.1, 51.5, date(2020, 1, 1), date(2020, 1, 2))
 
     assert inner.call_count == 2  # different buffer radii must not share a cache entry
+
+
+# --- Cache versioning -----------------------------------------------------
+#
+# A cached series is only reusable if it was written by code that produced
+# the same contract. Entries from before unit normalisation hold raw
+# ERA5-Land values (metres, kelvin, joules); returning one of those would
+# hand the models values three orders of magnitude away from the canonical
+# unit, with no error anywhere. Such entries must be treated as a miss.
+
+
+def test_entry_written_without_versioning_is_refetched(tmp_path):
+    import pickle
+
+    inner = _CountingRetriever()
+    cached = CachingRetriever(inner, variable_name="dummy", cache_dir=tmp_path)
+    path = cached._cache_path("DAM_UP", date(2020, 1, 1), date(2020, 1, 2))
+
+    # Simulate a legacy entry: a bare (series, report) tuple.
+    legacy_series = pd.Series(
+        [999.0], index=pd.date_range("2020-01-01", periods=1), name="dummy"
+    )
+    legacy_report = RetrievalReport(
+        variable="dummy",
+        source="counting",
+        station_id="DAM_UP",
+        buffer_km=0.0,
+        start_date=date(2020, 1, 1),
+        end_date=date(2020, 1, 2),
+    )
+    with open(path, "wb") as f:
+        pickle.dump((legacy_series, legacy_report), f)
+
+    series, report = cached.fetch(
+        "DAM_UP", 32.1, 51.5, date(2020, 1, 1), date(2020, 1, 2)
+    )
+
+    assert inner.call_count == 1  # legacy entry ignored, inner was called
+    assert list(series.values) == [1.0, 2.0]  # fresh data, not the 999.0 stub
+    assert "from_cache" not in report.params
+
+
+def test_entry_with_different_version_is_refetched(tmp_path):
+    import pickle
+
+    inner = _CountingRetriever()
+    cached = CachingRetriever(inner, variable_name="dummy", cache_dir=tmp_path)
+    path = cached._cache_path("DAM_UP", date(2020, 1, 1), date(2020, 1, 2))
+
+    with open(path, "wb") as f:
+        pickle.dump({"version": 1, "series": None, "report": None}, f)
+
+    cached.fetch("DAM_UP", 32.1, 51.5, date(2020, 1, 1), date(2020, 1, 2))
+
+    assert inner.call_count == 1
+
+
+def test_corrupt_entry_is_refetched_not_raised(tmp_path):
+    inner = _CountingRetriever()
+    cached = CachingRetriever(inner, variable_name="dummy", cache_dir=tmp_path)
+    path = cached._cache_path("DAM_UP", date(2020, 1, 1), date(2020, 1, 2))
+
+    path.write_bytes(b"not a pickle")
+
+    series, _ = cached.fetch(
+        "DAM_UP", 32.1, 51.5, date(2020, 1, 1), date(2020, 1, 2)
+    )
+
+    assert inner.call_count == 1
+    assert list(series.values) == [1.0, 2.0]
+
+
+def test_written_entry_carries_current_version(tmp_path):
+    import pickle
+
+    inner = _CountingRetriever()
+    cached = CachingRetriever(inner, variable_name="dummy", cache_dir=tmp_path)
+    cached.fetch("DAM_UP", 32.1, 51.5, date(2020, 1, 1), date(2020, 1, 2))
+
+    path = cached._cache_path("DAM_UP", date(2020, 1, 1), date(2020, 1, 2))
+    with open(path, "rb") as f:
+        payload = pickle.load(f)
+
+    assert payload["version"] == caching._CACHE_SCHEMA_VERSION
+    assert payload["variable"] == "dummy"
+    assert payload["buffer_km"] == 0.0
+
+
+def test_stale_entry_is_overwritten_on_refetch(tmp_path):
+    import pickle
+
+    inner = _CountingRetriever()
+    cached = CachingRetriever(inner, variable_name="dummy", cache_dir=tmp_path)
+    path = cached._cache_path("DAM_UP", date(2020, 1, 1), date(2020, 1, 2))
+
+    path.write_bytes(b"garbage")
+    cached.fetch("DAM_UP", 32.1, 51.5, date(2020, 1, 1), date(2020, 1, 2))
+
+    with open(path, "rb") as f:
+        payload = pickle.load(f)
+    assert payload["version"] == caching._CACHE_SCHEMA_VERSION
